@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.provider.OpenableColumns;
 
 import net.ypresto.androidtranscoder.MediaTranscoder;
 
@@ -472,6 +473,8 @@ public class VideoEditor extends CordovaPlugin {
 
         // Handle the special case where you get an Android content:// uri.
         if (decoded.startsWith("content:")) {
+            Log.d(TAG,getPath(this.cordova.getActivity().getApplicationContext(), Uri.parse(decoded)));
+
             fp = new File(getPath(this.cordova.getActivity().getApplicationContext(), Uri.parse(decoded)));
         } else {
             // Test to see if this is a valid URL first
@@ -514,15 +517,74 @@ public class VideoEditor extends CordovaPlugin {
 
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
+        Log.d(TAG, "kitkat version: " + isKitKat);
+        Log.d(TAG, "DocumentsContract: " + DocumentsContract.isDocumentUri(context, uri));
         // DocumentProvider
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+            Log.d(TAG, "got to point 1");
             // ExternalStorageProvider
-            if (isExternalStorageDocument(uri)) {
+            if (isDriveStorage(uri)){
+                Log.d(TAG, "got to drive");
+                
+                // String filePath = null;
+                // Log.d(TAG,"URI = "+ uri);                                       
+                // if (uri != null && "content".equals(uri.getScheme())) {
+                //     Log.d(TAG, "got inside if");
+                //     Cursor cursor = context.getContentResolver().query(uri, new String[] { android.provider.MediaStore.Files.FileColumns.DATA }, null, null, null);
+                //     cursor.moveToFirst();   
+                //     filePath = cursor.getString(0);
+                //     cursor.close();
+                // } else {
+                //     Log.d(TAG, "got inside else");
+                //     filePath = uri.getPath();
+                // }
+                // Log.d("","Chosen path = "+ filePath);
+
+                // String mimeType = context.getContentResolver().getType(uri);
+                // Log.d(TAG,mimeType);
+                // Cursor returnCursor = context.getContentResolver().openInputStream(uri)
+                // int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                // int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+                // returnCursor.moveToFirst();
+                // Log.d(TAG,returnCursor.getString(nameIndex));
+                // Log.d(TAG,Long.toString(returnCursor.getLong(sizeIndex)));
+
+                // try{
+                //     InputStream input = context.getContentResolver().openInputStream(uri);
+                //     try {
+                //         File file = new File(context.getCacheDir(), "cacheFileAppeal.mp4");
+                //         OutputStream output = new FileOutputStream(file);
+                //         try {
+                //             try {
+                //                 byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                //                 int read;
+
+                //                 while ((read = input.read(buffer)) != -1) {
+                //                     output.write(buffer, 0, read);
+                //                 }
+                //                 output.flush();
+                //             } finally {
+                //                 output.close();
+                //             }
+                //         } catch (Exception e) {
+                //             e.printStackTrace(); // handle exception, define IOException and others
+                //         }
+                //     } finally {
+                //         input.close();
+                //     }
+                // }
+                // catch(Exception e){
+                //     e.printStackTrace();
+                // }
+            }
+            else if (isExternalStorageDocument(uri)) {
+            Log.d(TAG, "got to point 2");
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
                 final String type = split[0];
 
                 if ("primary".equalsIgnoreCase(type)) {
+            Log.d(TAG, "got to point 3");
                     return Environment.getExternalStorageDirectory() + "/" + split[1];
                 }
 
@@ -530,6 +592,7 @@ public class VideoEditor extends CordovaPlugin {
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
+            Log.d(TAG, "got to point 4");
 
                 final String id = DocumentsContract.getDocumentId(uri);
                 final Uri contentUri = ContentUris.withAppendedId(
@@ -539,6 +602,7 @@ public class VideoEditor extends CordovaPlugin {
             }
             // MediaProvider
             else if (isMediaDocument(uri)) {
+            Log.d(TAG, "got to point 5");
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
                 final String type = split[0];
@@ -552,6 +616,7 @@ public class VideoEditor extends CordovaPlugin {
                     contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                 }
 
+            Log.d(TAG, "got to point 6");
                 final String selection = "_id=?";
                 final String[] selectionArgs = new String[] {
                         split[1]
@@ -569,6 +634,7 @@ public class VideoEditor extends CordovaPlugin {
             return uri.getPath();
         }
 
+            Log.d(TAG, "got to point 7");
         return null;
     }
 
@@ -629,5 +695,14 @@ public class VideoEditor extends CordovaPlugin {
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Drive Storage.
+     */
+    public static boolean isDriveStorage(Uri uri) {
+        return "com.google.android.apps.docs.storage".equals(uri.getAuthority());
+    }
+
 
 }
