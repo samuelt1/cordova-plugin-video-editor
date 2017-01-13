@@ -1,4 +1,4 @@
-//
+cordova.define("cordova-plugin-video-editor.VideoEditor", function(require, exports, module) { //
 //  VideoEditor.js
 //
 //  Created by Josh Bavari on 01-14-2014
@@ -46,6 +46,10 @@ VideoEditor.prototype.getVideoInfo = function(success, error, options) {
   exec(success, error, pluginName, 'getVideoInfo', [options]);
 };
 
+VideoEditor.prototype.getVideo = function(success, error, options) {
+  exec(success, error, pluginName, 'getVideo', [options]);
+};
+
 VideoEditor.prototype.execFFMPEG = function(success, error, options) {
   var msg = 'execFFMPEG has been removed as of v1.1.0';
   console.log(msg);
@@ -59,3 +63,5 @@ VideoEditor.prototype.execFFPROBE = function(success, error, options) {
 };
 
 module.exports = new VideoEditor();
+
+});

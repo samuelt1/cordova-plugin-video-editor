@@ -8,13 +8,14 @@ import java.util.Date;
 import java.util.Locale;
 
 import android.graphics.Bitmap;
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.PluginResult;
+import org.apache.cordova.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
+import android.widget.Toast;
+import android.os.Bundle;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -33,11 +34,17 @@ import android.provider.OpenableColumns;
 
 import net.ypresto.androidtranscoder.MediaTranscoder;
 
+
 /**
  * VideoEditor plugin for Android
  * Created by Ross Martin 2-2-15
  */
 public class VideoEditor extends CordovaPlugin {
+
+    private static final int CAMERA_REQUEST = 1888;  
+    private static final int CROP_CAMERA = 100; 
+    private static final int REQUEST_CAMERA = 1888;  
+    // private static final int CROP_CAMERA = 100; 
 
     private static final String TAG = "VideoEditor";
 
@@ -70,9 +77,86 @@ public class VideoEditor extends CordovaPlugin {
                 callback.error(e.toString());
             }
             return true;
+        } else if (action.equals("getVideo")) {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            cordova.startActivityForResult((CordovaPlugin) this, intent, 0);
+                // Send no result, to execute the callbacks later
+            // PluginResult pluginResult = new  PluginResult(PluginResult.Status.NO_RESULT);
+            // pluginResult.setKeepCallback(true); // Keep callback
+
+        return true;
+
+
+            // try {
+            //     this.getVideo(args);
+            // } catch (IOException e) {
+            //     callback.error(e.toString());
+            // }
+            // return true;
         }
 
         return false;
+    }
+
+    private void getVideo(JSONArray args){
+            
+
+        // Context context=this.cordova.getActivity().getApplicationContext();
+        // JSONObject options = args.optJSONObject(0);
+        // Log.d(TAG, "options: " + options.toString());
+        // // int type = options.toInt();
+        //             Log.e(TAG, "6");
+        // // if (type == 0) {
+        //             Log.e(TAG, "7");
+        //     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        //     File f = new File(android.os.Environment
+        //             .getExternalStorageDirectory(), "temp.jpg");
+        //     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+        //     context.startActivityForResult(intent, REQUEST_CAMERA);
+        // } else if (type == 1) {
+        //             Log.e(TAG, "8");
+        //     Intent intent = new Intent(
+        //             Intent.ACTION_PICK,
+        //             android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        //     intent.setType("image/*");
+        //     startActivityForResult(
+        //             Intent.createChooser(intent, "Select File"),
+        //             SELECT_FILE);
+    // }
+    }
+
+    @Override
+    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        if(resultCode == cordova.getActivity().RESULT_OK){
+            tolog(ReflectionToStringBuilder.toString( data ));
+            Bundle extras = data.getExtras();
+            
+            tolog(ReflectionToStringBuilder.toString( extras ));
+            // String information = extras.getString("data"); // data parameter will be send from the other activity.
+            tolog(information); // Shows a toast with the sent information in the other class
+            // PluginResult resultado = new PluginResult(PluginResult.Status.OK, "this value will be sent to cordova");
+            // resultado.setKeepCallback(true);
+            // PUBLIC_CALLBACKS.sendPluginResult(resultado);
+            return;
+        }else if(resultCode == cordova.getActivity().RESULT_CANCELED){
+            tolog("failed");
+            // PluginResult resultado = new PluginResult(PluginResult.Status.OK, "canceled action, process this in javascript");
+            // resultado.setKeepCallback(true);
+            // PUBLIC_CALLBACKS.sendPluginResult(resultado);
+            return;
+        }
+        // Handle other results if exists.
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+    
+    // A function to show a toast with some data, just demo
+    public void tolog(String toLog){
+        Log.d(TAG, toLog);
+        Context context = cordova.getActivity();
+        int duration = Toast.LENGTH_SHORT;
+
+        Toast toast = Toast.makeText(context, toLog, duration);
+        toast.show();
     }
 
     /**
